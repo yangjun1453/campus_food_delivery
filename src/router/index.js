@@ -10,6 +10,7 @@ import FoodPreferences from "../pages/FoodPreferences.vue";
 import HealthGoals from "../pages/HealthGoals.vue";
 import AllOrder from "../pages/AllOrder.vue";
 import Delivery from "../pages/Delivery.vue";
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -28,6 +29,10 @@ const router = createRouter({
     {
       path: "/register",
       component: Register,
+    },
+    {
+path:'/admin',
+component:Admin
     },
     {
       path: "/recommendations",
@@ -93,6 +98,7 @@ import { useUserStore } from "../store/user.js";
 import UnfinishedOrders from "../pages/UnfinishedOrders.vue";
 import Recommendations from "../pages/Recommendations.vue";
 import Addresses from "../pages/Addresses.vue";
+import Admin from "../pages/Admin.vue";
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
   console.log("Navigating to:", to.path);

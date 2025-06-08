@@ -38,9 +38,7 @@
 </template>
 <script setup>
 import { reactive, ref } from "vue";
-
 import { useRouter } from "vue-router";
-
 import { useUserStore } from "../store/user.js";
 
 const formData = reactive({
@@ -53,17 +51,26 @@ const router = useRouter();
 const successMessage = ref("");
 
 const onLoginBtnClick = async () => {
-  try {
-    await userStore.login(formData.username, formData.password);
-
-    successMessage.value = "登录成功！正在跳转...";
+  if (formData.username === "admin" && formData.password === "admin") {
+    // 假设密码也为 "admin"
+    successMessage.value = "管理员登录成功！正在跳转...";
     errorMessage.value = "";
     setTimeout(() => {
-      router.push(userStore.isMerchant() ? "/merchant" : "/profile");
+      router.push("/admin"); // 跳转到管理员界面，你需要定义这个路由
     }, 2000);
-  } catch (err) {
-    errorMessage.value = err.message || "登录失败，请检查用户名或密码";
-    successMessage.value = "";
+  } else {
+    try {
+      await userStore.login(formData.username, formData.password);
+
+      successMessage.value = "登录成功！正在跳转...";
+      errorMessage.value = "";
+      setTimeout(() => {
+        router.push(userStore.isMerchant() ? "/merchant" : "/profile");
+      }, 2000);
+    } catch (err) {
+      errorMessage.value = err.message || "登录失败，请检查用户名或密码";
+      successMessage.value = "";
+    }
   }
 };
 </script>
