@@ -56,24 +56,9 @@ export const useUserStore = defineStore("user", {
       } catch (error) {
         throw new Error(error.response?.data?.message || "登录失败，请重试");
       }
-    },
-    async register(
-      username,
-      password,
-      email,
-      role,
-      merchant_name,
-      contact_info
-    ) {
+    },    async register(userData) {
       try {
-        const response = await apiClient.post("/api/register", {
-          username,
-          password,
-          email,
-          role,
-          merchant_name,
-          contact_info,
-        });
+        const response = await apiClient.post("/api/register", userData);
         const user = response.data.user;
         this.userInfo = {
           userId: user.userId,
@@ -103,16 +88,18 @@ export const useUserStore = defineStore("user", {
     },
     getToken() {
       return this.token;
-    },
-    isMerchant() {
+    },    isMerchant() {
       return this.userInfo?.role === "merchant";
     },
     isUser() {
-      return this.userInfo?.role === "user";
+      return this.userInfo?.role === "student" || this.userInfo?.role === "staff";
     },
     isDelivery() {
-  return this.userInfo?.role === "delivery";
-},
+      return this.userInfo?.role === "delivery";
+    },
+    isAdmin() {
+      return this.userInfo?.role === "admin";
+    },
     // 新增更新用户信息的方法
     async updateUserInfo(updates) {
       try {

@@ -168,7 +168,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useOrdersStore } from "../store/order.js";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
@@ -298,6 +298,20 @@ const notifyPickup = async (orderId) => {
     alert("通知失败");
   }
 };
+
+// 页面加载和 merchantId 变化时获取商品和订单列表
+watch(
+  () => userInfo.value.merchantId,
+  (mid) => {
+    if (mid) {
+      itemsStore.fetchItems(mid);
+      ordersStore.fetchOrders(mid).then(() => {
+        orders.value = ordersStore.orders;
+      });
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>

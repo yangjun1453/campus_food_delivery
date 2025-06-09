@@ -31,17 +31,13 @@ const router = createRouter({
       component: Register,
     },
     {
-path:'/admin',
-component:Admin
-    },
-    {
       path: "/recommendations",
       component: Recommendations,
     },
     {
       path: "/profile",
       component: Profile,
-      meta: { requiresAuth: true, role: "user" },
+      meta: { requiresAuth: true, role: "student" },
     },
     {
       path: "/merchant",
@@ -89,43 +85,103 @@ component:Admin
       path: "/address",
       component: Addresses,
     },
+    {
+      path: "/admin",
+      component: Admin,
+      meta: { requiresAuth: true, role: "admin" },
+    },
   ],
 });
 
+// 先导出路由实例
 export default router;
 
+// 然后再导入其他依赖
 import { useUserStore } from "../store/user.js";
 import UnfinishedOrders from "../pages/UnfinishedOrders.vue";
 import Recommendations from "../pages/Recommendations.vue";
 import Addresses from "../pages/Addresses.vue";
 import Admin from "../pages/Admin.vue";
+
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
-  console.log("Navigating to:", to.path);
-  console.log("User info:", userStore.userInfo);
+  userStore.initialize();
 
-  if (to.meta.requiresAuth) {
-    if (!userStore.userInfo || Object.keys(userStore.userInfo).length === 0) {
-      console.log("未登录，重定向到 /login");
-      next("/login");
-    } else if (to.meta.role && to.meta.role !== userStore.userInfo.role) {
-      console.log("角色不匹配，检查重定向");
-      if (userStore.isMerchant()) {
-        next("/merchant");
-      } else if (userStore.isUser()) {
-        next("/profile");
-      } else if (userStore.isDelivery) {
-        next("/delivery");
-      } else {
-        console.log("未知角色，重定向到 /login");
-        next("/login"); // 未匹配任何角色时跳转登录
-      }
-    } else {
-      console.log("允许访问");
-      next();
-    }
-  } else {
-    console.log("无需权限，直接放行");
-    next();
+  // 管理员只能访问 /admin 和 /login
+  if (
+    userStore.token &&
+    userStore.isAdmin() &&
+    to.path !== "/admin" &&
+    to.path !== "/login"
+  ) {
+    next("/admin");
+    return;
   }
+
+  // 商家只能访问 /merchant 和 /login
+  if (
+    userStore.token &&
+    userStore.isMerchant() &&
+    to.path !== "/merchant" &&
+    to.path !== "/login"
+  ) {
+    next("/merchant");
+    return;
+  }
+
+  // 外卖员只能访问 /delivery 和 /login
+  if (
+    userStore.token &&
+    userStore.isDelivery() &&
+    to.path !== "/delivery" &&
+    to.path !== "/login"
+  ) {
+    next("/delivery");
+    return;
+  }
+
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!userStore.token) {
+      next({
+        path: "/login",
+        query: { redirect: to.fullPath },
+      });
+      return;
+    }
+    if (to.meta.role) {
+      const requiredRole = to.meta.role;
+      let hasPermission = false;
+      switch (requiredRole) {
+        case "admin":
+          hasPermission = userStore.isAdmin();
+          break;
+        case "merchant":
+          hasPermission = userStore.isMerchant();
+          break;
+        case "student":
+          hasPermission = userStore.isUser();
+          break;
+        case "delivery":
+          hasPermission = userStore.isDelivery();
+          break;
+      }
+      if (!hasPermission) {
+        next("/home");
+        return;
+      }
+    }
+  }
+
+  if (to.path === "/login" && userStore.token) {
+    if (userStore.isAdmin()) {
+      next("/admin");
+    } else if (userStore.isMerchant()) {
+      next("/merchant");
+    } else {
+      next("/profile");
+    }
+    return;
+  }
+
+  next();
 });

@@ -1,6 +1,9 @@
 <template>
   <div class="order-container">
-    <BackButton :path="'/login'" />
+    <div class="header">
+      
+      <button class="logout" @click="handleLogout">退出登录</button>
+    </div>
     <h2 class="order-title">可抢外卖订单</h2>
 
     <nut-tabs v-model="value" style="margin-bottom: 20px">
@@ -101,10 +104,14 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import apiClient from "../request.js";
+import { useUserStore } from "../store/user.js";
+import { useRouter } from "vue-router";
 
 const pendingOrders = ref([]);
 const processingOrders = ref([]);
 const value = ref("1");
+const userStore = useUserStore();
+const router = useRouter();
 
 const formatTime = (time) => {
   const date = new Date(time);
@@ -192,6 +199,12 @@ const statusClass = (status) => {
   return "";
 };
 
+// 退出登录处理
+const handleLogout = () => {
+  userStore.logout();
+  router.push("/login");
+};
+
 // 挂载时拉取订单
 onMounted(() => {
   fetchPendingOrders();
@@ -207,6 +220,26 @@ onMounted(() => {
   padding: 20px;
   background-color: #ffffff;
   border-radius: 12px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+button.logout {
+  background-color: #c62828;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+button.logout:hover {
+  background-color: #b71c1c;
 }
 
 .order-title {

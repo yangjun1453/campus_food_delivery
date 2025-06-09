@@ -51,26 +51,24 @@ const router = useRouter();
 const successMessage = ref("");
 
 const onLoginBtnClick = async () => {
-  if (formData.username === "admin" && formData.password === "admin") {
-    // 假设密码也为 "admin"
-    successMessage.value = "管理员登录成功！正在跳转...";
+  try {
+    await userStore.login(formData.username, formData.password);
+    successMessage.value = "登录成功！正在跳转...";
     errorMessage.value = "";
+    
+    // 根据用户角色跳转到对应页面
     setTimeout(() => {
-      router.push("/admin"); // 跳转到管理员界面，你需要定义这个路由
+      if (userStore.isAdmin()) {
+        router.push("/admin");
+      } else if (userStore.isMerchant()) {
+        router.push("/merchant");
+      } else {
+        router.push("/profile");
+      }
     }, 2000);
-  } else {
-    try {
-      await userStore.login(formData.username, formData.password);
-
-      successMessage.value = "登录成功！正在跳转...";
-      errorMessage.value = "";
-      setTimeout(() => {
-        router.push(userStore.isMerchant() ? "/merchant" : "/profile");
-      }, 2000);
-    } catch (err) {
-      errorMessage.value = err.message || "登录失败，请检查用户名或密码";
-      successMessage.value = "";
-    }
+  } catch (err) {
+    errorMessage.value = err.message || "登录失败，请检查用户名或密码";
+    successMessage.value = "";
   }
 };
 </script>
